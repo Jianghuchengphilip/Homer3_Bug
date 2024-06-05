@@ -1,25 +1,39 @@
 function [datetimeNum, datetimeStr] = datestr2datenum(datetimeStr)
 datetimeNum = 0;
-
 START_YEAR     = 2000;
-MONTHS         = {'1ÔÂ','2ÔÂ','3ÔÂ','4ÔÂ','5ÔÂ','6ÔÂ','7ÔÂ','8ÔÂ','9ÔÂ','10ÔÂ','11ÔÂ','12ÔÂ'};
+ENG_MONTHS = {'jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'};
+CHN_MONTHS = {'01æœˆ','02æœˆ','03æœˆ','04æœˆ','05æœˆ','06æœˆ','07æœˆ','08æœˆ','09æœˆ','10æœˆ','11æœˆ','12æœˆ'};
 NUMDAYSINMONTH = [  31    29    31    30    31    30    31    31    30    31    30    31 ];
-
 base_yr  = 32140800;   % 12*31*24*60*60
 base_mo  = 2678400;    % 31*24*60*60;
 base_day = 86400;      % 24*60*60;
 base_hr  = 3600;       % 60*60;
 base_min = 60;
-datetimeStr
-date_standard_fmt = char(datetime(datetimeStr, 'TimeZone','local','Format','dd-MMÔÂ-yyyy HH:mm:ss'));
-date_standard_fmt
-year    = str2num(date_standard_fmt(7:10)) - START_YEAR;
-month   = find(strcmpi(MONTHS, date_standard_fmt(3:5)));
-day     = str2num(date_standard_fmt(1:2));
-hour    = str2num(date_standard_fmt(12:13));
-min     = str2num(date_standard_fmt(15:16));
-sec     = str2num(date_standard_fmt(18:19));
-
+if ~isempty(regexpi(datetimeStr, '[ä¸€-é¾¥]'))
+    % Chinese date format
+    MONTHS = CHN_MONTHS;
+    date_fmt = 'dd-MMæœˆ-yyyy HH:mm:ss';
+else
+    % English date format
+    MONTHS = ENG_MONTHS;
+    date_fmt = 'MMM-dd-yyyy HH:mm:ss';
+end
+date_standard_fmt = char(datetime(datetimeStr, 'TimeZone','local','Format',date_fmt));
+if ~isempty(regexpi(datetimeStr, '[ä¸€-é¾¥]'))
+    year    = str2num(date_standard_fmt(8:11)) - START_YEAR;
+    month   = find(strcmpi(MONTHS, date_standard_fmt(4:6)));
+    day     = str2num(date_standard_fmt(1:2));
+    hour    = str2num(date_standard_fmt(13:14));
+    min     = str2num(date_standard_fmt(16:17));
+    sec     = str2num(date_standard_fmt(19:20));
+else
+    year    = str2num(date_standard_fmt(8:11)) - START_YEAR;
+    month   = find(strcmpi(MONTHS, date_standard_fmt(1:3)));
+    day     = str2num(date_standard_fmt(5:6));
+    hour    = str2num(date_standard_fmt(13:14));
+    min     = str2num(date_standard_fmt(16:17));
+    sec     = str2num(date_standard_fmt(19:20));
+end
 % Now that we have a numeric date, check it for errors
 if year<0
     return;
@@ -41,4 +55,3 @@ if sec<0 || sec>59
 end
 
 datetimeNum = uint32(year*base_yr + month*base_mo + day*base_day + hour*base_hr + min*base_min + sec);
-
